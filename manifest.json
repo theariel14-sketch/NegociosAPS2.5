@@ -1,0 +1,18 @@
+{
+  "name": "APS Negocios 2.5",
+  "short_name": "APS 2.5",
+  "description": "Cotizador de Renta Vitalicia y Gestión APS Negocios",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0d4f8b",
+  "theme_color": "#0d4f8b",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
