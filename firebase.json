@@ -1,6 +1,7 @@
 {
   "hosting": {
     "public": "public",
+    "site": "negocios-aps-xyz",
     "ignore": [
       "firebase.json",
       "**/.*",
@@ -39,3 +40,4 @@
     ]
   }
 }
+
