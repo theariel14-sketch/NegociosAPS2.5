@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d4f8b">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <title>APS Negocios 2.5</title>
+  <style>
+    :root { font-family: system-ui, sans-serif; color: #123; background: #f4f7fb; }
+    body { margin: 0; } header { background: #0d4f8b; color: white; padding: 18px 22px; display:flex; justify-content:space-between; align-items:center; }
+    main { max-width: 960px; margin: 28px auto; padding: 0 18px; } .card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 8px 24px #1231; }
+    button { border: 0; border-radius: 10px; padding: 10px 14px; cursor:pointer; } #notification-button { background: transparent; color:white; font-size: 1.4rem; position:relative; }
+    #notification-count { position:absolute; top:0; right:0; background:#e5484d; color:white; border-radius:50%; font-size:.7rem; min-width:16px; }
+    #notification-panel { display:none; position:fixed; right:16px; top:72px; width:min(360px, calc(100vw - 32px)); background:white; padding:16px; border-radius:14px; box-shadow:0 10px 30px #1234; z-index:2; }
+    #notification-panel.open { display:block; } .notification-item { border-bottom:1px solid #e7edf3; padding:8px 0; } .notification-item p { margin:5px 0; }
+    .muted, #push-status { color:#607080; font-size:.9rem; } #enable-push { background:#0d4f8b; color:white; } .empty { color:#718096; }
+  </style>
+</head>
+<body>
+  <header><strong>APS Negocios 2.5</strong><button id="notification-button" aria-label="Abrir notificaciones">🔔<span id="notification-count"></span></button></header>
+  <main><section class="card"><h1>Bienvenido</h1><p class="muted">La bandeja interna conserva tus avisos aunque el permiso de notificaciones del dispositivo esté desactivado.</p><p id="push-status" role="status"></p><button id="enable-push">Activar notificaciones</button></section></main>
+  <aside id="notification-panel" aria-label="Bandeja de notificaciones"><h2>Notificaciones</h2><div id="notification-list"></div></aside>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-messaging-compat.js"></script>
+  <script src="/firebase-config.js"></script><script src="/app.js"></script>
+</body>
+</html>
+
