@@ -9,7 +9,5 @@ globalThis.APS_FIREBASE_CONFIG = {
   appId: '1:175006985628:web:3dc760b1361c6a61246c59',
   measurementId: 'G-FJVRWV7S2P'
 };
-// Fill after generating the Web Push certificate key pair in Firebase Console.
-globalThis.APS_FIREBASE_VAPID_KEY = 'REPLACE_WITH_FIREBASE_WEB_PUSH_CERTIFICATE_KEY_PAIR';
-// Fill with the deployed APS Notificaciones Central registration endpoint.
-globalThis.APS_PUSH_REGISTER_URL = 'REPLACE_WITH_APS_NOTIFICACIONES_CENTRAL_PUSH_REGISTER_URL';
+globalThis.APS_FIREBASE_VAPID_KEY = 'BJGEvVfOL68L5IUNiGJG1P4mQP-Z6SspC1V-SBgQs_FA5TwTWoV4rpmGpBYdBmAaSt_VGN-QQJWccYDPHwKbZ1I';
+globalThis.APS_PUSH_REGISTER_URL = 'https://script.google.com/macros/s/AKfycbwH88AWp9didjS7gJ_ATnth5i6f0jlVYaYBslL1lM0kRuS0zUwjpilXC5MR1kG5zV6B/exec';
