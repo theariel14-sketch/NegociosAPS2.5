@@ -147,6 +147,12 @@
     // the user accepts the normal operating-system permission prompt.
     const PUSH_CHANNEL = 'aps_negocios_todos';
     const PUSH_PLACEHOLDER = 'REPLACE_WITH_';
+    let currentFcmToken = '';
+
+    function sendFcmTokenToPortal() {
+      if (!currentFcmToken || !appFrame.contentWindow) return;
+      appFrame.contentWindow.postMessage({ type: 'APS_FCM_TOKEN', token: currentFcmToken, platform: 'web' }, '*');
+    }
 
     async function registerAutomaticPush() {
       if (!globalThis.APS_FIREBASE_CONFIG || !globalThis.APS_FIREBASE_VAPID_KEY || !globalThis.APS_PUSH_REGISTER_URL) return;
@@ -162,10 +168,8 @@
         const messaging = firebase.messaging();
         const token = await messaging.getToken({ vapidKey: globalThis.APS_FIREBASE_VAPID_KEY, serviceWorkerRegistration: registration });
         if (!token) return;
-        await fetch(globalThis.APS_PUSH_REGISTER_URL, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token, channel: PUSH_CHANNEL, app: 'Negocios APS', platform: 'web', url: location.origin, registeredAt: new Date().toISOString() })
-        });
+        currentFcmToken = token;
+        sendFcmTokenToPortal();
         messaging.onMessage((payload) => {
           const data = payload.notification || payload.data || {};
           if (Notification.permission === 'granted') new Notification(data.title || 'Negocios APS', { body: data.body || 'Tienes una nueva notificación.' });
@@ -185,6 +189,7 @@
 
     appFrame.addEventListener('load', () => {
       setTimeout(() => splash.classList.add('hidden'), 180);
+      sendFcmTokenToPortal();
     });
 
     // Evita dejar el splash permanente si el iframe tarda demasiado.
