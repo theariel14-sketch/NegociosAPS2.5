@@ -1,40 +1,25 @@
-# APS Negocios 2.5
+# Negocios APS — PWA instalable
 
-Base PWA para APS Negocios 2.5 con bandeja interna (`🔔`) y registro automático de notificaciones push mediante Firebase Cloud Messaging.
+Esta PWA envuelve la Web App actual de Google Apps Script; no reemplaza el sistema existente. La URL configurada en `public/index.html` es la indicada en `URL_ACTUAL.txt`.
 
-## Qué incluye
+## Incluye
 
-- PWA instalable con `manifest.json` y `icon.svg`.
-- Registro automático del permiso y token FCM al abrir la app.
-- `firebase-messaging-sw.js` para recibir avisos cuando la app está cerrada.
-- Bandeja interna local que conserva los avisos recibidos y el botón `🔔`.
-- Contrato de registro para APS Notificaciones Central con el canal `aps_negocios_todos`.
+- Instalación como PWA en Android, iPhone y iPad.
+- Portal Apps Script dentro de un iframe con permisos de cámara, micrófono, geolocalización y portapapeles.
+- Splash, instalación guiada e iconos reales de Negocios APS.
+- Service worker para cachear el shell local sin interceptar Apps Script.
+- Registro automático de push FCM en el canal `aps_negocios_todos`, cuando se hayan configurado Firebase, VAPID y el endpoint de Notificaciones Central.
 
-## Configuración obligatoria antes de publicar
+## Antes de publicar
 
-No se inventaron credenciales. Edita `firebase-config.js` con los valores del proyecto Firebase real; ese mismo archivo es cargado por el service worker:
+1. En Apps Script agrega `.setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)` a la cadena que devuelve `doGet()` y crea una nueva versión del deployment. Ver `APPS_SCRIPT_CAMBIO.txt`.
+2. Sustituye los placeholders de `public/firebase-config.js` por la configuración Web del proyecto Firebase real, la clave VAPID y el endpoint `APS_PUSH_REGISTER_URL`.
+3. El endpoint central debe guardar/actualizar el token recibido con `channel: "aps_negocios_todos"` y enviar desde backend usando Firebase Admin SDK. Nunca pongas una clave privada en esta PWA.
+4. Publica con Firebase Hosting usando `firebase.json`.
 
-1. `apiKey`, `authDomain`, `projectId`, `storageBucket`, `messagingSenderId` y `appId` de Firebase Web.
-2. `APS_FIREBASE_VAPID_KEY`, desde Firebase Console → Project settings → Cloud Messaging → Web Push certificates.
-3. `APS_PUSH_REGISTER_URL`, endpoint de APS Notificaciones Central que reciba `POST` JSON.
+## Verificación
 
-El endpoint debe guardar o actualizar por token el registro recibido, al menos con:
+La URL de Apps Script fue aportada en `URL_ACTUAL.txt`. No se asume una URL `*.web.app` ni un proyecto Firebase concreto hasta confirmar el proyecto en Firebase Console.
 
-```json
-{
-  "token": "...",
-  "channel": "aps_negocios_todos",
-  "app": "APS Negocios 2.5",
-  "platform": "web",
-  "url": "https://dominio-publicado.example"
-}
-```
-
-Productividad, Carnets APS Pro, Visitas y Validar RNC deben enviar sus eventos al flujo de Notificaciones Central. El backend central debe usar Firebase Admin SDK (o su equivalente seguro) para enviar a los tokens registrados; la clave privada nunca debe ir en este repositorio ni en el navegador.
-
-## Estado verificado
-
-- El repositorio remoto conocido es `theariel14-sketch/NegociosAPS2.5`.
-- La URL `negocios-aps-xyz.web.app` no pudo verificarse desde el entorno actual; no se asume que sea el proyecto Firebase correcto.
-- La bandeja interna queda disponible aun sin Firebase configurado.
+Prueba después del despliegue: inicio de sesión, Productividad, Carnetización, Visitas, cámara/escáner, archivos, PDF, impresión, descargas, navegación y permiso push. La bandeja interna y su botón `🔔` pertenecen al portal embebido y se conservan.
 
