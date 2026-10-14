@@ -1,0 +1,10 @@
+NEGOCIOS APS — CAMBIO NECESARIO EN APPS SCRIPT
+
+La PWA carga la Web App actual dentro de un iframe. Para permitirlo, el HtmlOutput
+que devuelve doGet() debe incluir:
+
+.setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+
+No reemplaces la lógica actual de doGet(); agrega únicamente ese método a la cadena
+que devuelve el HtmlOutput. Después crea una nueva versión del deployment /exec.
+
