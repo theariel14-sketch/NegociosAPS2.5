@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0864BE">
+  <meta name="color-scheme" content="light">
+  <title>Negocios APS</title>
+
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Negocios APS">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+  <style>
+    :root {
+      --aps-blue: #0864BE;
+      --aps-deep: #063B7A;
+      --aps-light: #BFDDF5;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; }
+    body {
+      overflow: hidden;
+      background: #fff;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    #app {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #fff;
+    }
+
+    #splash {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(145deg, #f7fbff, #eaf5ff);
+      transition: opacity .28s ease, visibility .28s ease;
+    }
+    #splash.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    #splash img {
+      width: min(46vw, 230px);
+      height: auto;
+      filter: drop-shadow(0 16px 30px rgba(5, 58, 122, .18));
+    }
+
+    #installBtn {
+      position: fixed;
+      z-index: 80;
+      right: max(14px, env(safe-area-inset-right));
+      bottom: max(14px, env(safe-area-inset-bottom));
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 17px;
+      background: var(--aps-deep);
+      color: #fff;
+      font-weight: 750;
+      font-size: 14px;
+      box-shadow: 0 10px 28px rgba(6, 59, 122, .28);
+      cursor: pointer;
+      display: none;
+    }
+
+    #iosHelp {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: none;
+      place-items: end center;
+      background: rgba(0,0,0,.38);
+      padding: 18px;
+    }
+    #iosHelp .card {
+      width: min(520px, 100%);
+      border-radius: 22px;
+      background: #fff;
+      padding: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.25);
+    }
+    #iosHelp h2 { margin: 0 0 8px; font-size: 20px; color: #0b315b; }
+    #iosHelp p { margin: 6px 0; line-height: 1.45; color: #34495e; }
+    #iosHelp button {
+      width: 100%;
+      margin-top: 14px;
+      border: 0;
+      border-radius: 14px;
+      padding: 12px;
+      background: var(--aps-blue);
+      color: white;
+      font-weight: 700;
+    }
+
+    @media (display-mode: standalone) {
+      #installBtn { display: none !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="splash" aria-hidden="true">
+    <img src="./icons/icon-512.png" alt="Negocios APS">
+  </div>
+
+  <iframe
+    id="app"
+    title="Negocios APS"
+    src="https://script.google.com/a/macros/aps.do/s/AKfycbyiz7_IEuXXGlIGqxRvl3mq7QELtvLOcpawGTyTelmTGjIlNHQ37hmGWKLEysD01BWwuw/exec?portal_launch=105"
+    allow="camera *; microphone *; geolocation *; clipboard-read *; clipboard-write *; fullscreen *"
+    allowfullscreen
+  ></iframe>
+
+  <button id="installBtn" type="button">Instalar Negocios APS</button>
+
+  <div id="iosHelp" role="dialog" aria-modal="true" aria-labelledby="iosTitle">
+    <div class="card">
+      <h2 id="iosTitle">Instalar Negocios APS</h2>
+      <p>En iPhone/iPad abre esta página en Safari.</p>
+      <p>Toca <strong>Compartir</strong> y luego <strong>Agregar a pantalla de inicio</strong>.</p>
+      <button id="closeIosHelp" type="button">Entendido</button>
+    </div>
+  </div>
+
+  <script>
+    const splash = document.getElementById('splash');
+    const appFrame = document.getElementById('app');
+    const installBtn = document.getElementById('installBtn');
+    const iosHelp = document.getElementById('iosHelp');
+    const closeIosHelp = document.getElementById('closeIosHelp');
+
+    // Push is opt-in at the browser level, but registration is automatic once
+    // the user accepts the normal operating-system permission prompt.
+    const PUSH_CHANNEL = 'aps_negocios_todos';
+    const PUSH_PLACEHOLDER = 'REPLACE_WITH_';
+    let currentFcmToken = '';
+
+    function sendFcmTokenToPortal() {
+      if (!currentFcmToken || !appFrame.contentWindow) return;
+      appFrame.contentWindow.postMessage({ type: 'APS_FCM_TOKEN', token: currentFcmToken, platform: 'web' }, '*');
+    }
+
+    async function registerAutomaticPush() {
+      if (!globalThis.APS_FIREBASE_CONFIG || !globalThis.APS_FIREBASE_VAPID_KEY || !globalThis.APS_PUSH_REGISTER_URL) return;
+      const values = Object.values(globalThis.APS_FIREBASE_CONFIG).concat([
+        globalThis.APS_FIREBASE_VAPID_KEY, globalThis.APS_PUSH_REGISTER_URL
+      ]);
+      if (values.some((value) => !value || String(value).includes(PUSH_PLACEHOLDER))) return;
+      if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') return;
+        const registration = await navigator.serviceWorker.ready;
+        const messaging = firebase.messaging();
+        const token = await messaging.getToken({ vapidKey: globalThis.APS_FIREBASE_VAPID_KEY, serviceWorkerRegistration: registration });
+        if (!token) return;
+        currentFcmToken = token;
+        sendFcmTokenToPortal();
+        messaging.onMessage((payload) => {
+          const data = payload.notification || payload.data || {};
+          if (Notification.permission === 'granted') new Notification(data.title || 'Negocios APS', { body: data.body || 'Tienes una nueva notificación.' });
+        });
+      } catch (error) { console.warn('Negocios APS: push pendiente de configuración o permiso', error); }
+    }
+
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true;
+
+    const isIOS =
+      /iphone|ipad|ipod/i.test(navigator.userAgent) &&
+      !window.MSStream;
+
+    let deferredPrompt = null;
+
+    appFrame.addEventListener('load', () => {
+      setTimeout(() => splash.classList.add('hidden'), 180);
+      sendFcmTokenToPortal();
+    });
+
+    // Evita dejar el splash permanente si el iframe tarda demasiado.
+    setTimeout(() => splash.classList.add('hidden'), 6500);
+
+    window.addEventListener('beforeinstallprompt', (event) => {
+      event.preventDefault();
+      deferredPrompt = event;
+      if (!isStandalone) installBtn.style.display = 'block';
+    });
+
+    installBtn.addEventListener('click', async () => {
+      if (isIOS) {
+        iosHelp.style.display = 'grid';
+        return;
+      }
+
+      if (!deferredPrompt) return;
+
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      installBtn.style.display = 'none';
+    });
+
+    if (isIOS && !isStandalone) {
+      installBtn.style.display = 'block';
+    }
+
+    closeIosHelp.addEventListener('click', () => {
+      iosHelp.style.display = 'none';
+    });
+
+    window.addEventListener('appinstalled', () => {
+      deferredPrompt = null;
+      installBtn.style.display = 'none';
+    });
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', async () => {
+        try {
+          await navigator.serviceWorker.register('./sw.js');
+          console.log('Negocios APS: Service Worker activo');
+          if (globalThis.firebase && globalThis.firebase.messaging) registerAutomaticPush();
+        } catch (err) {
+          console.error('Negocios APS: error registrando Service Worker', err);
+        }
+      });
+    }
+  </script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-messaging-compat.js"></script>
+  <script src="./firebase-config.js"></script>
+</body>
+</html>
+
