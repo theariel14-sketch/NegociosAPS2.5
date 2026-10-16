@@ -1,0 +1,20 @@
+{
+  "hosting": {
+    "rewrites": [
+      { "source": "/api/register-push", "function": { "functionId": "registerPushInstallation", "region": "us-central1" } },
+      { "source": "/api/unregister-push", "function": { "functionId": "unregisterPushInstallation", "region": "us-central1" } },
+      { "source": "/api/push-config", "function": { "functionId": "pushConfig", "region": "us-central1" } },
+      { "source": "/api/push-broadcast", "function": { "functionId": "pushBroadcast", "region": "us-central1" } },
+      { "source": "/api/push-health", "function": { "functionId": "pushHealth", "region": "us-central1" } }
+    ],
+    "headers": [
+      {
+        "source": "/push/**",
+        "headers": [
+          { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+        ]
+      }
+    ]
+  }
+}
+
