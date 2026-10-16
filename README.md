@@ -8,7 +8,7 @@ Esta PWA envuelve la Web App actual de Google Apps Script; no reemplaza el siste
 - Portal Apps Script dentro de un iframe con permisos de cámara, micrófono, geolocalización y portapapeles.
 - Splash, instalación guiada e iconos reales de Negocios APS.
 - Service worker para cachear el shell local sin interceptar Apps Script.
-- Registro automático de push FCM en el canal `aps_negocios_todos`, cuando se hayan configurado Firebase, VAPID y el endpoint de Notificaciones Central.
+- Registro automático de push FCM: el usuario solo concede una vez el permiso normal del sistema. El token FCM se envía al Portal embebido y éste lo registra en APS Notificaciones Central con la sesión APS activa.
 
 ## Antes de publicar
 
@@ -23,3 +23,12 @@ La URL de Apps Script fue aportada en `URL_ACTUAL.txt`. No se asume una URL `*.w
 
 Prueba después del despliegue: inicio de sesión, Productividad, Carnetización, Visitas, cámara/escáner, archivos, PDF, impresión, descargas, navegación y permiso push. La bandeja interna y su botón `🔔` pertenecen al portal embebido y se conservan.
 
+
+
+## Integración post-auditoría
+
+- El botón **Activar notificaciones APS** aparece únicamente cuando el navegador/PWA todavía necesita permiso. No existe formulario ni registro manual de dispositivos.
+- Si el permiso ya está concedido, el token FCM se renueva/entrega automáticamente al Portal.
+- Al tocar una notificación push, la PWA abre `#notificaciones` y solicita al Portal mostrar su Centro de Notificaciones dentro de la misma aplicación.
+- El backend Apps Script debe exponer `registrarPushPortalGAS` en Portal y aceptar `REGISTER_PUSH` en Notificaciones Central.
+- Los secretos de sincronización de Productividad/Visitas deben vivir en Script Properties, nunca en este repositorio.
