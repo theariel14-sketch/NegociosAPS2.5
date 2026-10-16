@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#07111f">
+  <title>APS · Notificaciones</title>
+  <style>
+    :root{--bg:#07111f;--card:#fff;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--blue:#0ea5e9;--blue2:#0284c7;--surface:#f8fafc}
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:var(--bg);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink)}
+    button,select{font:inherit}
+    body{background:radial-gradient(circle at 15% 0%,rgba(14,165,233,.20),transparent 32%),linear-gradient(165deg,#06101f,#0a1830)}
+    .shell{max-width:880px;margin:0 auto;min-height:100vh;padding:18px 14px 40px}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:12px;color:white;margin-bottom:16px}
+    .brand{display:flex;align-items:center;gap:11px}
+    .logo{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(145deg,#0ea5e9,#2563eb);font-weight:950}
+    .brand small{display:block;color:#7dd3fc;font-weight:900;font-size:10px;letter-spacing:.12em}
+    .brand strong{display:block;font-size:18px;margin-top:2px}
+    .user{font-size:11px;color:#cbd5e1;text-align:right;font-weight:700}
+    .panel{background:rgba(255,255,255,.985);border:1px solid rgba(255,255,255,.25);border-radius:26px;box-shadow:0 22px 60px rgba(2,6,23,.35);overflow:hidden}
+    .hero{padding:22px 20px 16px;border-bottom:1px solid var(--line)}
+    .hero-row{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+    .title{margin:0;font-size:28px;letter-spacing:-.04em}
+    .subtitle{margin:7px 0 0;color:var(--muted);font-size:13px;line-height:1.45}
+    .badge{min-width:42px;height:42px;padding:0 12px;border-radius:14px;background:#e0f2fe;color:#0369a1;display:flex;align-items:center;justify-content:center;font-weight:950}
+    .toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;padding:13px 20px;border-bottom:1px solid var(--line);background:#fff}
+    .select,.btn{min-height:42px;border:1px solid var(--line);border-radius:12px;background:#fff;padding:0 12px;font-size:12px;font-weight:800;color:#334155}
+    .btn{cursor:pointer}.btn-primary{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;border:0}.btn:disabled{opacity:.55;cursor:wait}
+    .stats{display:flex;gap:8px;flex-wrap:wrap;padding:12px 20px 0}
+    .pill{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 10px;font-size:10px;font-weight:850;color:#475569}.pill strong{color:#0f172a}
+    .source-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:12px 20px 4px}
+    .source-card{border:1px solid var(--line);border-radius:13px;background:#fff;padding:10px}.source-card b{display:block;font-size:10px}.source-card span{display:block;margin-top:4px;font-size:9px;color:#64748b}.ok{color:#059669!important}.bad{color:#dc2626!important}
+    .feed{padding:12px 20px 20px}.empty{padding:42px 18px;text-align:center;color:#64748b;font-weight:700;font-size:13px}
+    .item{position:relative;display:grid;grid-template-columns:12px minmax(0,1fr) auto;gap:12px;padding:14px 4px;border-bottom:1px solid #eef2f7}.item:last-child{border-bottom:0}
+    .dot{width:9px;height:9px;border-radius:50%;background:#cbd5e1;margin-top:7px}.item.unread .dot{background:#0ea5e9;box-shadow:0 0 0 4px rgba(14,165,233,.10)}
+    .item h3{margin:0;font-size:13px;line-height:1.3}.item p{margin:5px 0 0;color:#64748b;font-size:11.5px;line-height:1.45}
+    .meta{margin-top:7px;display:flex;flex-wrap:wrap;gap:6px}.tag{padding:4px 7px;border-radius:999px;background:#f1f5f9;color:#475569;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}
+    .time{font-size:9px;color:#94a3b8;font-weight:800;white-space:nowrap;padding-top:2px}.open-btn{margin-top:8px;border:0;background:transparent;color:#0284c7;font-size:10px;font-weight:900;padding:0;cursor:pointer}
+    .error{display:none;margin:12px 20px;padding:11px 12px;border-radius:12px;border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;font-size:11px;font-weight:800;line-height:1.4}.error.show{display:block}
+    @media(max-width:640px){
+      .shell{padding:10px 8px 28px}.panel{border-radius:22px}.hero{padding:18px 14px 13px}.title{font-size:24px}
+      .toolbar{grid-template-columns:1fr 1fr;padding:10px 14px}.toolbar .select{grid-column:1/-1}
+      .stats,.feed,.source-grid{padding-left:14px;padding-right:14px}.source-grid{grid-template-columns:1fr 1fr}
+      .item{grid-template-columns:10px minmax(0,1fr)}.time{grid-column:2}.user{display:none}
+    }
+  
+    .feed-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+    .source-card .open-btn{margin-top:4px}
+
+</style>
+</head>
+<body>
+<main class="shell">
+  <header class="top">
+    <div class="brand"><div class="logo">APS</div><div><small>NEGOCIOS 2.5</small><strong>Notificaciones</strong></div></div>
+    <div id="userBox" class="user"></div>
+  </header>
+
+  <section class="panel">
+    <div class="hero">
+      <div class="hero-row">
+        <div><h1 class="title">Actividad de Negocios</h1><p class="subtitle">Productividad, Carnets, Visitas y Validar RNC en un solo lugar, sin modificar los módulos de origen.</p></div>
+        <div id="unreadBadge" class="badge">0</div>
+      </div>
+    </div>
+
+    <div id="errorBox" class="error" role="alert" aria-live="assertive" aria-atomic="true"></div>
+
+    <div class="toolbar">
+      <select id="filterSource" class="select" aria-label="Filtrar notificaciones por fuente">
+        <option value="">Todas las fuentes</option>
+        <option value="PRODUCTIVIDAD">Productividad</option>
+        <option value="CARNETS">Carnets</option>
+        <option value="VISITAS">Visitas</option>
+        <option value="RNC">Validar RNC</option>
+      </select>
+      <button id="onlyUnreadBtn" class="btn" type="button">Solo nuevas</button>
+      <button id="markAllBtn" class="btn btn-primary" type="button">Marcar leídas</button>
+    </div>
+
+    <div class="stats">
+      <span class="pill">Nuevas <strong id="statUnread">0</strong></span>
+      <span class="pill">Mostradas <strong id="statShown">0</strong></span>
+      <span class="pill">Actualización <strong id="statTime">—</strong></span>
+    </div>
+
+    <div id="sources" class="source-grid"></div>
+    <div id="feed" class="feed" aria-label="Listado de notificaciones"><div class="empty">Cargando notificaciones…</div></div>
+  </section>
+</main>
+
+<script>
+const TOKEN = <?!= JSON.stringify(apsToken) ?>;
+let ALL=[],ONLY_UNREAD=false,SOURCES=[];
+const $=id=>document.getElementById(id);
+
+function showError(message){
+  const box=$('errorBox');
+  if(!message){box.textContent='';box.classList.remove('show');return;}
+  box.textContent=message;box.classList.add('show');
+}
+function gas(fn,...args){
+  return new Promise((resolve,reject)=>{
+    const r=google.script.run.withSuccessHandler(resolve).withFailureHandler(err=>reject(new Error(err&&err.message?err.message:String(err))));
+    switch(fn){
+      case 'getBootGAS':r.getBootGAS(...args);break;
+      case 'getNotificationsGAS':r.getNotificationsGAS(...args);break;
+      case 'markReadGAS':r.markReadGAS(...args);break;
+      case 'markAllReadGAS':r.markAllReadGAS(...args);break;
+      default:reject(new Error('Función no autorizada: '+fn));
+    }
+  });
+}
+async function init(){
+  if(!TOKEN){
+    showError('Abre este módulo desde Negocios 2.5 para conservar tu sesión central.');
+    $('feed').innerHTML='<div class="empty">No hay una sesión APS disponible.</div>';return;
+  }
+  try{
+    const r=await gas('getBootGAS',TOKEN);
+    if(!r||!r.ok) throw new Error((r&&r.message)||'No se pudo cargar.');
+    const u=r.user||{};
+    $('userBox').innerHTML='<strong>'+esc(u.nombre||u.usuarioId||'')+'</strong><br><span>'+esc([u.rol,u.gerenciaId].filter(Boolean).join(' · '))+'</span>';
+    ALL=r.notifications||[];SOURCES=r.sources||[];
+    updateCounters(r.unread||0);renderSources();render();
+    setInterval(refresh,30000);
+  }catch(e){showError(e.message||String(e));$('feed').innerHTML='<div class="empty">No fue posible cargar el centro de notificaciones.</div>';}
+}
+async function refresh(){
+  try{const r=await gas('getNotificationsGAS',TOKEN,150,false);if(!r||!r.ok)return;ALL=r.notifications||[];updateCounters(r.unread||0);render();}catch(_){}
+}
+function updateCounters(unread){
+  $('unreadBadge').textContent=unread>99?'99+':String(unread);$('statUnread').textContent=unread;
+  $('statTime').textContent=new Date().toLocaleTimeString('es-DO',{hour:'2-digit',minute:'2-digit'});
+}
+function sourceLabel(source){
+  const labels={
+    PRODUCTIVIDAD:'Productividad',
+    CARNETS:'Carnets APS Pro',
+    VISITAS:'Visitas',
+    RNC:'Validar RNC'
+  };
+  return labels[String(source||'').toUpperCase()]||String(source||'');
+}
+
+function withToken(url){
+  const clean=String(url||'').trim();
+  if(!clean)return '';
+  if(!TOKEN)return clean;
+  return clean+(clean.includes('?')?'&':'?')+'aps_token='+encodeURIComponent(TOKEN);
+}
+
+function openSourceModule(source,url){
+  const cleanUrl=String(url||'').trim();
+  if(!cleanUrl)return;
+
+  if(window.parent && window.parent!==window){
+    window.parent.postMessage({
+      type:'APS_NOTIFICATIONS_OPEN_SOURCE',
+      source:String(source||''),
+      url:cleanUrl
+    },'*');
+    return;
+  }
+
+  window.location.href=withToken(cleanUrl);
+}
+
+function renderSources(){
+  const host=$('sources');if(!SOURCES.length){host.innerHTML='';return;}
+  host.innerHTML=SOURCES.map(s=>`
+    <div class="source-card">
+      <b>${esc(s.nombre||sourceLabel(s.fuente))}</b>
+      <span class="${s.ok?'ok':'bad'}">${s.ok?'Conectado':'Error'}</span>
+      <span>${esc(s.ultimaRevision||'')}</span>
+      ${s.url?`<button class="open-btn" onclick="openSourceModule('${js(s.fuente)}','${js(s.url)}')">Abrir módulo</button>`:''}
+    </div>`).join('');
+}
+function render(){
+  const source=$('filterSource').value;
+  const rows=ALL.filter(n=>(!source||n.fuente===source)&&(!ONLY_UNREAD||!n.leida));
+  $('statShown').textContent=rows.length;
+  if(!rows.length){$('feed').innerHTML='<div class="empty">No hay notificaciones para este filtro.</div>';return;}
+  $('feed').innerHTML=rows.map(n=>`
+    <article class="item ${n.leida?'':'unread'}">
+      <span class="dot"></span>
+      <div>
+        <h3>${esc(n.titulo)}</h3>
+        <p>${esc(n.detalle)}</p>
+        <div class="meta">
+          <span class="tag">${esc(n.fuenteNombre||sourceLabel(n.fuente))}</span>
+          <span class="tag">${esc(n.accion)}</span>
+          ${n.gerenciaId?`<span class="tag">${esc(n.gerenciaId)}</span>`:''}
+        </div>
+        <div class="feed-actions">
+          ${n.url?`<button class="open-btn" onclick="openSourceModule('${js(n.fuente)}','${js(n.url)}')">Abrir módulo</button>`:''}
+          ${n.leida?'':`<button class="open-btn" onclick="markRead('${js(n.id)}')">Marcar como leída</button>`}
+        </div>
+      </div>
+      <time class="time">${esc(n.fecha)}</time>
+    </article>`).join('');
+}
+async function markRead(id){
+  try{await gas('markReadGAS',TOKEN,id);const item=ALL.find(n=>n.id===id);if(item)item.leida=true;updateCounters(ALL.filter(n=>!n.leida).length);render();}
+  catch(e){showError(e.message||String(e));}
+}
+$('filterSource').addEventListener('change',render);
+$('onlyUnreadBtn').addEventListener('click',()=>{ONLY_UNREAD=!ONLY_UNREAD;$('onlyUnreadBtn').textContent=ONLY_UNREAD?'Ver todas':'Solo nuevas';render();});
+$('markAllBtn').addEventListener('click',async()=>{
+  const btn=$('markAllBtn');btn.disabled=true;
+  try{await gas('markAllReadGAS',TOKEN);ALL.forEach(n=>n.leida=true);updateCounters(0);render();}
+  catch(e){showError(e.message||String(e));}
+  finally{btn.disabled=false;}
+});
+function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
+function js(v){return String(v==null?'':v).replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
+init();
+</script>
+</body>
+</html>
+
