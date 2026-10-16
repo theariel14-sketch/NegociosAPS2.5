@@ -1,4 +1,4 @@
-const CACHE_NAME = 'negocios-aps-shell-v3';
+const CACHE_NAME = 'negocios-aps-shell-v4';
 
 importScripts('https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.13.2/firebase-messaging-compat.js');
@@ -90,7 +90,7 @@ self.addEventListener('fetch', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const targetUrl = event.notification.data?.url || './index.html';
+  const targetUrl = event.notification.data?.url || './#notificaciones';
   event.waitUntil(clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
     for (const client of clientList) {
       if (client.url.includes(self.location.origin) && 'focus' in client) {
