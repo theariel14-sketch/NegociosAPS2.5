@@ -60,7 +60,7 @@
       filter: drop-shadow(0 16px 30px rgba(5, 58, 122, .18));
     }
 
-    #installBtn {
+    #installBtn, #pushBtn {
       position: fixed;
       z-index: 80;
       right: max(14px, env(safe-area-inset-right));
@@ -108,6 +108,7 @@
 
     @media (display-mode: standalone) {
       #installBtn { display: none !important; }
+      #pushBtn { bottom: max(14px, env(safe-area-inset-bottom)); }
     }
   </style>
 </head>
@@ -126,6 +127,7 @@
   ></iframe>
 
   <button id="installBtn" type="button">Instalar Negocios APS</button>
+  <button id="pushBtn" type="button" style="display:none;bottom:max(14px, env(safe-area-inset-bottom));background:#0864BE">Activar notificaciones APS</button>
 
   <div id="iosHelp" role="dialog" aria-modal="true" aria-labelledby="iosTitle">
     <div class="card">
@@ -140,12 +142,12 @@
     const splash = document.getElementById('splash');
     const appFrame = document.getElementById('app');
     const installBtn = document.getElementById('installBtn');
+    const pushBtn = document.getElementById('pushBtn');
     const iosHelp = document.getElementById('iosHelp');
     const closeIosHelp = document.getElementById('closeIosHelp');
 
     // Push is opt-in at the browser level, but registration is automatic once
     // the user accepts the normal operating-system permission prompt.
-    const PUSH_CHANNEL = 'aps_negocios_todos';
     const PUSH_PLACEHOLDER = 'REPLACE_WITH_';
     let currentFcmToken = '';
 
@@ -154,27 +156,56 @@
       appFrame.contentWindow.postMessage({ type: 'APS_FCM_TOKEN', token: currentFcmToken, platform: 'web' }, '*');
     }
 
-    async function registerAutomaticPush() {
-      if (!globalThis.APS_FIREBASE_CONFIG || !globalThis.APS_FIREBASE_VAPID_KEY || !globalThis.APS_PUSH_REGISTER_URL) return;
+    async function registerAutomaticPush(requestPermission = false) {
+      if (!globalThis.APS_FIREBASE_CONFIG || !globalThis.APS_FIREBASE_VAPID_KEY) return;
       const values = Object.values(globalThis.APS_FIREBASE_CONFIG).concat([
-        globalThis.APS_FIREBASE_VAPID_KEY, globalThis.APS_PUSH_REGISTER_URL
+        globalThis.APS_FIREBASE_VAPID_KEY
       ]);
       if (values.some((value) => !value || String(value).includes(PUSH_PLACEHOLDER))) return;
       if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+
       try {
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') return;
+        let permission = Notification.permission;
+
+        // iOS/PWA y navegadores modernos exigen una acción del usuario para
+        // mostrar el diálogo. No se registra ningún dispositivo manualmente:
+        // este botón solo concede el permiso normal del sistema.
+        if (permission === 'default' && requestPermission) {
+          permission = await Notification.requestPermission();
+        }
+
+        if (permission !== 'granted') {
+          if (permission === 'default' && isStandalone) pushBtn.style.display = 'block';
+          return;
+        }
+
+        pushBtn.style.display = 'none';
+
         const registration = await navigator.serviceWorker.ready;
         const messaging = firebase.messaging();
-        const token = await messaging.getToken({ vapidKey: globalThis.APS_FIREBASE_VAPID_KEY, serviceWorkerRegistration: registration });
+        const token = await messaging.getToken({
+          vapidKey: globalThis.APS_FIREBASE_VAPID_KEY,
+          serviceWorkerRegistration: registration
+        });
+
         if (!token) return;
+
         currentFcmToken = token;
         sendFcmTokenToPortal();
+
         messaging.onMessage((payload) => {
           const data = payload.notification || payload.data || {};
-          if (Notification.permission === 'granted') new Notification(data.title || 'Negocios APS', { body: data.body || 'Tienes una nueva notificación.' });
+          if (Notification.permission === 'granted') {
+            new Notification(data.title || 'Negocios APS', {
+              body: data.body || 'Tienes una nueva notificación.',
+              icon: './icons/icon-192.png',
+              data: { url: './#notificaciones' }
+            });
+          }
         });
-      } catch (error) { console.warn('Negocios APS: push pendiente de configuración o permiso', error); }
+      } catch (error) {
+        console.warn('Negocios APS: no se pudo activar push', error);
+      }
     }
 
     const isStandalone =
@@ -187,9 +218,26 @@
 
     let deferredPrompt = null;
 
+    function sendPendingNavigationToPortal() {
+      if (!appFrame.contentWindow) return;
+      if (location.hash === '#notificaciones') {
+        appFrame.contentWindow.postMessage({ type: 'APS_OPEN_NOTIFICATIONS' }, '*');
+      }
+    }
+
     appFrame.addEventListener('load', () => {
       setTimeout(() => splash.classList.add('hidden'), 180);
       sendFcmTokenToPortal();
+      sendPendingNavigationToPortal();
+    });
+
+    window.addEventListener('hashchange', sendPendingNavigationToPortal);
+
+    window.addEventListener('message', (event) => {
+      if (event.source !== appFrame.contentWindow) return;
+      if (event.data?.type === 'APS_FCM_REGISTERED') {
+        pushBtn.style.display = 'none';
+      }
     });
 
     // Evita dejar el splash permanente si el iframe tarda demasiado.
@@ -223,6 +271,19 @@
       iosHelp.style.display = 'none';
     });
 
+    pushBtn.addEventListener('click', async () => {
+      pushBtn.disabled = true;
+      const original = pushBtn.textContent;
+      pushBtn.textContent = 'Activando...';
+      await registerAutomaticPush(true);
+      pushBtn.disabled = false;
+      pushBtn.textContent = original;
+
+      if (Notification.permission === 'denied') {
+        pushBtn.style.display = 'none';
+      }
+    });
+
     window.addEventListener('appinstalled', () => {
       deferredPrompt = null;
       installBtn.style.display = 'none';
@@ -233,7 +294,13 @@
         try {
           await navigator.serviceWorker.register('./sw.js');
           console.log('Negocios APS: Service Worker activo');
-          if (globalThis.firebase && globalThis.firebase.messaging) registerAutomaticPush();
+          if (globalThis.firebase && globalThis.firebase.messaging) {
+            if (Notification.permission === 'granted') {
+              registerAutomaticPush(false);
+            } else if (Notification.permission === 'default' && isStandalone) {
+              pushBtn.style.display = 'block';
+            }
+          }
         } catch (err) {
           console.error('Negocios APS: error registrando Service Worker', err);
         }
